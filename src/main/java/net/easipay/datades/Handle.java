@@ -36,13 +36,13 @@ public class Handle {
         for (String tableName : split_table_name) {
             String column_name = PropertiesUtil.getPropertiesVaue("column_name");
             String[] split_column_name = column_name.split(",");
-            for (String columName : split_column_name) {
-                if (columName.split("=")[0].equals(tableName)) {
+            for (String columnName : split_column_name) {
+                if (columnName.split("=")[0].equals(tableName)) {
                     String primary_key_name = PropertiesUtil.getPropertiesVaue("primary_key_name");
                     String[] pk_split = primary_key_name.split(",");
                     for (String pk : pk_split) {
                         if (pk.split("=")[0].equals(tableName)) {
-                            DBUtil.encrypt(tableName, columName.split("=")[1], pk.split("=")[1]);
+                            DBUtil.encrypt(tableName, columnName.split("=")[1], pk.split("=")[1]);
                         }
                     }
                 }
