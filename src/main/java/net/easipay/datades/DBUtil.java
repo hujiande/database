@@ -1,45 +1,24 @@
 package net.easipay.datades;
 
 import net.easipay.common.DesBase64;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DBUtil {
-    private static Connection newConn = null;
 
-    public static Connection getConnect() throws Exception {
-        if (newConn == null) {
-            init();
-        }
-        if (newConn.isClosed()) {
-            init();
-        }
-        return newConn;
-    }
+    private static final Logger log = Logger.getLogger(DBUtil.class.getName());
 
-    public static void init() throws Exception {
-        String dbDriver = PropertiesUtil.getPropertiesVaue("db_driver");
-        String dbUrl = PropertiesUtil.getPropertiesVaue("db_url");
-        String dbUsername = PropertiesUtil.getPropertiesVaue("db_username");
-        String dbPassword = PropertiesUtil.getPropertiesVaue("db_password");
-        if (StringUtils.isEmpty(dbDriver) || StringUtils.isEmpty(dbUrl) || StringUtils.isEmpty(dbUsername) || StringUtils.isEmpty(dbPassword)) {
-            throw new Exception("configuration file is error !");
-        }
-        Class.forName(dbDriver);
-        newConn = DriverManager.getConnection(dbUrl, dbUsername,
-                dbPassword);
-    }
-
+    @SuppressWarnings("unused")
     public static void decrypt(String table_name, String column_name, String id) throws Exception {
-        Connection conn = getConnect();
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        Connection conn = ConnectInstance.getConnect();
+        PreparedStatement ps;
+        ResultSet rs;
         try {
             String sql = "select " + id + "," + column_name + " from " +
                     table_name;
@@ -69,11 +48,10 @@ public class DBUtil {
         }
     }
 
-    public static void encrypt(String table_name, String column_name, String id) throws Exception {
-        String encKey = PropertiesUtil.getPropertiesVaue("sec_key");
-        Connection conn = getConnect();
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+    public static void encrypt(String table_name, String column_name, String id, String encKey) throws SQLException, ClassNotFoundException {
+        Connection conn = ConnectInstance.getConnect();
+        PreparedStatement ps;
+        ResultSet rs;
         try {
             String sql = "select " + id + "," + column_name + " from " + table_name;
             ps = conn.prepareStatement(sql);
@@ -89,7 +67,6 @@ public class DBUtil {
                     ps.close();
                 }
             }
-            System.out.println("deal complete!");
         } catch (Exception e) {
             e.printStackTrace();
         }
