@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -38,32 +37,42 @@ public class Handle {
             log.info("connect failed!");
             e.printStackTrace();
         }
+        String cryptTpye = PropertiesUtil.getPropertiesVaue("cryptTpye");
 
-        log.info("===============Start ENCRYPTION=================");
-        String table_name = PropertiesUtil.getPropertiesVaue("table_name");
+        log.info("===============Start " + cryptTpye + "=================");
         String column_name = PropertiesUtil.getPropertiesVaue("column_name");
         String primary_key_name = PropertiesUtil.getPropertiesVaue("primary_key_name");
         String encKey = PropertiesUtil.getPropertiesVaue("sec_key");
-        String[] split_table_name = table_name.split(",");
+        //String encKey = new String(PropertiesUtil.getPropertiesVaue("sec_key").getBytes(), "utf-8");
         String[] split_column_name = column_name.split(",");
         String[] pk_split = primary_key_name.split(",");
-        log.info("========Tables requiring encryption is : " + Arrays.toString(split_table_name) + "  ========");
-        log.info("========Column requiring encryption is : " + Arrays.toString(split_column_name) + "  ========");
+        log.info("========Table And Column requiring " + cryptTpye + " is : " + Arrays.toString(split_column_name) + "  ========");
         log.info("========PK is : " + Arrays.toString(pk_split) + "  ========");
         log.info("========Sec_key is : [" + encKey + "]========");
-        for (String tableName : split_table_name) {
-            for (String columnName : split_column_name) {
-                if (columnName.split("=")[0].equals(tableName)) {
-                    for (String pk : pk_split) {
-                        if (pk.split("=")[0].equals(tableName)) {
-                            try {
-                                log.info("========Tables is : [" + tableName + "] column is :[" + columnName.split("=")[1] + "] primary key is [" + pk.split("=")[1] + "]  is encrypting ========");
-                                DBUtil.encrypt(tableName, columnName.split("=")[1], pk.split("=")[1], encKey);
-                                log.info("========Tables is : [" + tableName + "] column is :[" + columnName.split("=")[1] + "] primary key is [" + pk.split("=")[1] + "]  is encrypted ========");
-                            } catch (Exception e) {
-                                log.info("encryption error!! Table is :[" + tableName + "] column is :[" + columnName.split("=")[1] + "] , please check");
-                                e.printStackTrace();
+            //以等号分割 =
+        for (String splitClumn : split_column_name) {
+            String[] splitTableColumn = splitClumn.split("=");
+            //以 & 分割
+            String[] clumnNames = splitTableColumn[1].split("&");
+            for (String clumnName : clumnNames) {
+                for (String pk : pk_split) {
+                    if (pk.split("=")[0].equals(splitTableColumn[0])) {
+                        try {
+                            log.info("========Tables is : [" + splitTableColumn[0] + "] column is :[" + clumnName + "] primary key is [" + pk.split("=")[1] + "]  is " + cryptTpye + "ING ========");
+                            switch (cryptTpye) {
+                                case "ENCRYPT":
+                                    DBUtil.encrypt(splitTableColumn[0], clumnName, pk.split("=")[1], encKey);
+                                    break;
+                                case "DECRYPT":
+                                    DBUtil.decrypt(splitTableColumn[0], clumnName, pk.split("=")[1], encKey);
+                                    break;
+                                default:
+                                    throw new Exception("加解密类型未知！请查看配置文件");
                             }
+                            log.info("========Tables is : [" + splitTableColumn[0] + "] column is :[" + clumnName + "] primary key is [" + pk.split("=")[1] + "]  is " + cryptTpye + "ED ========");
+                        } catch (Exception e) {
+                            log.info(cryptTpye + " error!! Table is :[" + splitTableColumn[0] + "] column is :[" + clumnName + "] , please check");
+                            e.printStackTrace();
                         }
                     }
                 }

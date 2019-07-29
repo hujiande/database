@@ -1,7 +1,6 @@
 package net.easipay.datades;
 
-import net.easipay.common.DesBase64;
-import org.apache.log4j.Logger;
+import net.easipay.pepp.common.util.DesBase64;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,10 +11,7 @@ import java.util.regex.Pattern;
 
 public class DBUtil {
 
-    private static final Logger log = Logger.getLogger(DBUtil.class.getName());
-
-    @SuppressWarnings("unused")
-    public static void decrypt(String table_name, String column_name, String id) throws Exception {
+    public static void decrypt(String table_name, String column_name, String id, String decKey) throws Exception {
         Connection conn = ConnectInstance.getConnect();
         PreparedStatement ps;
         ResultSet rs;
@@ -31,7 +27,7 @@ public class DBUtil {
                 Pattern pattern = Pattern.compile(regEx);
                 Matcher matcher = pattern.matcher(columnValue);
                 if (!matcher.matches()) {
-                    String plain = DesBase64.decrypt_sm4("bVa7Zr6THLshZIiH", columnValue);
+                    String plain = DesBase64.decrypt_sm4(decKey, columnValue);
                     if (plain != null) {
                         String updateSql = "update " + table_name + " set " +
                                 column_name + " = '" + plain + "' where " + id + " = '" +
@@ -58,7 +54,7 @@ public class DBUtil {
             rs = ps.executeQuery();
             while (rs.next()) {
                 String idStr = rs.getString(id);
-                String columnValue = rs.getString(column_name);
+                String columnValue =rs.getString(column_name);
                 String plain = DesBase64.encrypt_sm4(encKey, columnValue);
                 if (plain != null) {
                     String updateSql = "update " + table_name + " set " + column_name + " = '" + plain + "' where " + id + " = '" + idStr + "'";
