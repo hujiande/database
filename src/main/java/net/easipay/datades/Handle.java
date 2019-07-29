@@ -49,7 +49,7 @@ public class Handle {
         log.info("========Table And Column requiring " + cryptTpye + " is : " + Arrays.toString(split_column_name) + "  ========");
         log.info("========PK is : " + Arrays.toString(pk_split) + "  ========");
         log.info("========Sec_key is : [" + encKey + "]========");
-            //以等号分割 =
+        //以等号分割 =
         for (String splitClumn : split_column_name) {
             String[] splitTableColumn = splitClumn.split("=");
             //以 & 分割
@@ -59,15 +59,12 @@ public class Handle {
                     if (pk.split("=")[0].equals(splitTableColumn[0])) {
                         try {
                             log.info("========Tables is : [" + splitTableColumn[0] + "] column is :[" + clumnName + "] primary key is [" + pk.split("=")[1] + "]  is " + cryptTpye + "ING ========");
-                            switch (cryptTpye) {
-                                case "ENCRYPT":
-                                    DBUtil.encrypt(splitTableColumn[0], clumnName, pk.split("=")[1], encKey);
-                                    break;
-                                case "DECRYPT":
-                                    DBUtil.decrypt(splitTableColumn[0], clumnName, pk.split("=")[1], encKey);
-                                    break;
-                                default:
-                                    throw new Exception("加解密类型未知！请查看配置文件");
+                            if (cryptTpye.equals("ENCRYPT")) {
+                                DBUtil.encrypt(splitTableColumn[0], clumnName, pk.split("=")[1], encKey);
+                            } else if (cryptTpye.equals("DECRYPT")) {
+                                DBUtil.decrypt(splitTableColumn[0], clumnName, pk.split("=")[1], encKey);
+                            } else {
+                                throw new Exception("加解密类型未知！请查看配置文件");
                             }
                             log.info("========Tables is : [" + splitTableColumn[0] + "] column is :[" + clumnName + "] primary key is [" + pk.split("=")[1] + "]  is " + cryptTpye + "ED ========");
                         } catch (Exception e) {

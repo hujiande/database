@@ -16,7 +16,7 @@ public class ConnectInstance {
 
     private static Connection newConn = null;
 
-    private static final Logger log = Logger.getLogger(DBUtil.class.getName());
+    private static final Logger log = Logger.getLogger(ConnectInstance.class.getName());
 
     public static Connection getConnect() throws SQLException, ClassNotFoundException {
         if (newConn == null) {
