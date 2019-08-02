@@ -32,7 +32,6 @@ public class Handle {
             log.info("the specified configuration file is error, check it please!");
             return;
         }
-
         try {
             ConnectInstance.getConnect();
         } catch (Exception e) {
@@ -40,18 +39,15 @@ public class Handle {
             e.printStackTrace();
         }
         String cryptTpye = PropertiesUtil.getPropertiesVaue("cryptTpye");
-
         log.info("===============Start " + cryptTpye + "=================");
         String column_name = PropertiesUtil.getPropertiesVaue("column_name");
         String primary_key_name = PropertiesUtil.getPropertiesVaue("primary_key_name");
         String encKey = PropertiesUtil.getPropertiesVaue("sec_key");
-        //String encKey = new String(PropertiesUtil.getPropertiesVaue("sec_key").getBytes(), "utf-8");
         String[] split_column_name = column_name.split(",");
         String[] pk_split = primary_key_name.split(",");
         log.info("========Table And Column requiring " + cryptTpye + " is : " + Arrays.toString(split_column_name) + "  ========");
         log.info("========PK is : " + Arrays.toString(pk_split) + "  ========");
         log.info("========Sec_key is : [" + encKey + "]========");
-
         List<String> collist = new ArrayList<String>();
         String strTable = "";
         for (String splitClumn : split_column_name) {
@@ -59,9 +55,8 @@ public class Handle {
             strTable = splitTableColumn[0];
             collist.add(splitTableColumn[1]);
         }
-
         for (String pk : pk_split) {
-            if (pk.split("=")[0].equals(strTable)){
+            if (pk.split("=")[0].equals(strTable)) {
                 try {
                     log.info("========Tables is : [" + strTable + "] column is :[" + collist.toString() + "] primary key is [" + pk.split("=")[1] + "]  is " + cryptTpye + "ING ========");
                     if (cryptTpye.equals("ENCRYPT")) {
@@ -79,9 +74,6 @@ public class Handle {
 
             }
         }
-
-
-
         //以等号分割 =
 /*        for (String splitClumn : split_column_name) {
             String[] splitTableColumn = splitClumn.split("=");
