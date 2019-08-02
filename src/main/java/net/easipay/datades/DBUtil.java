@@ -9,62 +9,125 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.List;
+
 public class DBUtil {
 
-    public static void decrypt(String table_name, String column_name, String id, String decKey) throws Exception {
+    public static void decrypt(String table_name, List<String> columnList, String id, String decKey) throws Exception {
         Connection conn = ConnectInstance.getConnect();
         PreparedStatement ps;
         ResultSet rs;
+
+        String columns = "";
+        for(int i = 0; i < columnList.size(); i++){
+            columns = columns + columnList.get(i) + ",";
+        }
+
         try {
-            String sql = "select " + id + "," + column_name + " from " +
-                    table_name;
+            String sql = "select " + columns + id  + " from " + table_name;
+            System.out.println(" select sql: " + sql);
+
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
+            String idStr = "";
+            String colsets = "";
+            long count = 0;
             while (rs.next()) {
-                String idStr = rs.getString(id);
-                String columnValue = rs.getString(column_name);
-                String regEx = "^[0-9]*$";
-                Pattern pattern = Pattern.compile(regEx);
-                Matcher matcher = pattern.matcher(columnValue);
-                if (!matcher.matches()) {
-                    String plain = DesBase64.decrypt_sm4(decKey, columnValue);
-                    if (plain != null) {
-                        String updateSql = "update " + table_name + " set " +
-                                column_name + " = '" + plain + "' where " + id + " = '" +
-                                idStr + "'";
-                        ps = conn.prepareStatement(updateSql);
-                        ps.executeUpdate();
-                        ps.close();
+                idStr = rs.getString(id);
+
+                String colVal = "";
+                colsets = "";
+                for(int j = 0; j < columnList.size(); j++){
+                    colVal = rs.getString(columnList.get(j));
+                    if(null!=colVal&& colVal.lastIndexOf("=") >= 0) {
+                        String enVal = "";
+                        try {
+                            enVal = DesBase64.decrypt_sm4(decKey, colVal);
+                        } catch (Exception ex) {
+                            enVal = colVal;
+                        }
+                        if(null!=enVal) {
+                            colsets = colsets + columnList.get(j) + " = '" + enVal + "', ";
+                        }
                     }
+
+
+                }
+
+                String updateSql = "update " + table_name + " set " + colsets + " ENCRIYPT = '0' where " + id + " = '" + idStr + "'";
+
+                System.out.println(" update sql: " + updateSql);
+                ps = conn.prepareStatement(updateSql);
+                ps.executeUpdate();
+                ps.close();
+
+                count = count + 1;
+                if (count %10000 == 0){
+                    System.out.println("table " + table_name + " have updated " + count);
                 }
             }
-            System.out.println("deal complete !");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void encrypt(String table_name, String column_name, String id, String encKey) throws SQLException, ClassNotFoundException {
+    public static void encrypt(String table_name, List<String > columnList, String id, String encKey) throws SQLException, ClassNotFoundException {
         Connection conn = ConnectInstance.getConnect();
         PreparedStatement ps;
         ResultSet rs;
+
+        String columns = "";
+        for(int i = 0; i < columnList.size(); i++){
+            columns = columns + columnList.get(i) + ",";
+        }
+
         try {
-            String sql = "select " + id + "," + column_name + " from " + table_name;
+            String sql = "select " + columns + id  + " from " + table_name;
+            //System.out.println(" select sql: " + sql);
+
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
+            String idStr = "";
+            String colsets = "";
+            long count = 0;
             while (rs.next()) {
-                String idStr = rs.getString(id);
-                String columnValue =rs.getString(column_name);
-                String plain = DesBase64.encrypt_sm4(encKey, columnValue);
-                if (plain != null) {
-                    String updateSql = "update " + table_name + " set " + column_name + " = '" + plain + "' where " + id + " = '" + idStr + "'";
-                    ps = conn.prepareStatement(updateSql);
-                    ps.executeUpdate();
-                    ps.close();
+                idStr = rs.getString(id);
+
+                String colVal = "";
+                colsets = "";
+                for(int j = 0; j < columnList.size(); j++){
+                    colVal = rs.getString(columnList.get(j));
+                    String enVal = "";
+                    if(null != colVal && colVal.lastIndexOf("=") == -1){
+                        enVal = DesBase64.encrypt_sm4(encKey, colVal);
+                        if(null != enVal) {
+                            colsets = colsets + columnList.get(j) + " = '" + enVal + "', ";
+                        }
+                    }
+                }
+
+                String updateSql = "update " + table_name + " set " + colsets + " ENCRIYPT = '1' where " + id + " = '" + idStr + "'";
+
+                //System.out.println(" update sql: " + updateSql);
+                ps = conn.prepareStatement(updateSql);
+                ps.executeUpdate();
+                ps.close();
+
+                count = count + 1;
+                if (count %10000 == 0){
+                    System.out.println("table " + table_name + " have updated " + count);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args){
+        String encKey = "1111222211112222";
+        for(int i=0;i<1000;i++) {
+            String enVal = DesBase64.encrypt_sm4(encKey, ""+i);
+            System.out.println(i+":"+enVal + ":" + enVal.lastIndexOf("=="));
         }
     }
 }
