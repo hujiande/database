@@ -21,11 +21,6 @@ public class Handle {
     private static final Logger log = Logger.getLogger(Handle.class.getName());
 
     public static void main(String[] args) throws Exception {
-        String file = "E:\\database\\target\\handle.properties";
-        if (args.length > 0) {
-            log.info("Please Use the specified configuration file [" + args[0] + "]");
-            file = args[0];
-        }
         try {
             is = new FileInputStream(args[0]);
         } catch (Exception e) {
