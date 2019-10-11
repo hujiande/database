@@ -34,7 +34,7 @@ public class DBUtil {
                 colsets = "";
                 for (int j = 0; j < columnList.size(); j++) {
                     colVal = rs.getString(columnList.get(j));
-                    if (null != colVal && colVal.lastIndexOf("=") >= 0) {
+                    if (null != colVal /*&& colVal.lastIndexOf("=") >= 0*/) {
                         String enVal = "";
                         try {
                             enVal = DesBase64.decrypt_sm4(decKey, colVal);
@@ -42,7 +42,8 @@ public class DBUtil {
                             enVal = colVal;
                         }
                         if (null != enVal) {
-                            colsets = colsets + columnList.get(j) + " = '" + enVal + "', ";
+                            String replaceEnVal = enVal.replace("'", "''");
+                            colsets = colsets + columnList.get(j) + " = '" + replaceEnVal + "', ";
                         }
                     }
                 }
